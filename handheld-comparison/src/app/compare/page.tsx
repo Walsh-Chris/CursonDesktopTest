@@ -24,15 +24,34 @@ export default function ComparePage() {
 
   const fetchHandhelds = async () => {
     try {
+      console.log('Starting to fetch handheld data...')
       setLoading(true)
-      const response = await fetch('/api/handhelds')
+      
+      // Add timeout to the fetch
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+      
+      const response = await fetch('/api/handhelds', {
+        signal: controller.signal
+      })
+      
+      clearTimeout(timeoutId)
+      console.log('Response status:', response.status)
+      
       if (!response.ok) {
-        throw new Error('Failed to fetch handheld data')
+        throw new Error(`Failed to fetch handheld data: ${response.status}`)
       }
+      
       const data = await response.json()
+      console.log('Fetched data:', data)
       setHandhelds(data)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      console.error('Error fetching handhelds:', err)
+      if (err instanceof Error && err.name === 'AbortError') {
+        setError('Request timed out. Please try again.')
+      } else {
+        setError(err instanceof Error ? err.message : 'An error occurred')
+      }
     } finally {
       setLoading(false)
     }
