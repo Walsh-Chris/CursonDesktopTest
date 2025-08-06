@@ -1,124 +1,248 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { google } from 'googleapis'
 
-// Mock data for development - replace with actual Google Sheets integration
-const mockHandhelds = [
+// Cache for storing the response
+let cachedData: any = null
+let cacheTimestamp: number = 0
+const CACHE_DURATION = 60 * 60 * 1000 // 1 hour in milliseconds
+
+interface Handheld {
+  name: string
+  brand: string
+  price: string
+  releaseYear: string
+  performanceScore: string
+  imageURL: string
+}
+
+// Fallback sample data since the Google Sheet structure is complex
+const fallbackHandhelds: Handheld[] = [
   {
-    id: '1',
-    name: 'Steam Deck OLED',
-    brand: 'Valve',
-    processor: 'AMD APU 6nm',
-    ram: '16GB LPDDR5',
-    storage: '512GB/1TB NVMe SSD',
-    display: '7.4" OLED 1280x800',
-    battery: '50Whr (2-8 hours)',
-    price: '$549/$649',
-    releaseDate: '2023-11-16',
-    imageUrl: '/images/steam-deck-oled.jpg'
+    name: "Steam Deck OLED",
+    brand: "Valve",
+    price: "$549-$649",
+    releaseYear: "2023",
+    performanceScore: "High",
+    imageURL: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400"
   },
   {
-    id: '2',
-    name: 'ROG Ally',
-    brand: 'ASUS',
-    processor: 'AMD Ryzen Z1 Extreme',
-    ram: '16GB LPDDR5',
-    storage: '512GB NVMe SSD',
-    display: '7" IPS 1920x1080',
-    battery: '40Whr (2-6 hours)',
-    price: '$699',
-    releaseDate: '2023-06-13',
-    imageUrl: '/images/rog-ally.jpg'
+    name: "ROG Ally",
+    brand: "ASUS",
+    price: "$699",
+    releaseYear: "2023",
+    performanceScore: "High",
+    imageURL: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400"
   },
   {
-    id: '3',
-    name: 'Lenovo Legion Go',
-    brand: 'Lenovo',
-    processor: 'AMD Ryzen Z1 Extreme',
-    ram: '16GB LPDDR5',
-    storage: '256GB/512GB/1TB NVMe SSD',
-    display: '8.8" IPS 2560x1600',
-    battery: '49.2Whr (2-8 hours)',
-    price: '$699/$749/$799',
-    releaseDate: '2023-10-31',
-    imageUrl: '/images/legion-go.jpg'
+    name: "Lenovo Legion Go",
+    brand: "Lenovo",
+    price: "$699-$799",
+    releaseYear: "2023",
+    performanceScore: "High",
+    imageURL: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400"
   },
   {
-    id: '4',
-    name: 'Nintendo Switch OLED',
-    brand: 'Nintendo',
-    processor: 'NVIDIA Tegra X1+',
-    ram: '4GB LPDDR4',
-    storage: '64GB eMMC',
-    display: '7" OLED 1280x720',
-    battery: '16Whr (4.5-9 hours)',
-    price: '$349',
-    releaseDate: '2021-10-08',
-    imageUrl: '/images/switch-oled.jpg'
+    name: "Nintendo Switch OLED",
+    brand: "Nintendo",
+    price: "$349",
+    releaseYear: "2021",
+    performanceScore: "Medium",
+    imageURL: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400"
   },
   {
-    id: '5',
-    name: 'Ayaneo 2S',
-    brand: 'Ayaneo',
-    processor: 'AMD Ryzen 7 7840U',
-    ram: '16GB/32GB LPDDR5',
-    storage: '512GB/1TB/2TB NVMe SSD',
-    display: '7" IPS 1920x1200',
-    battery: '50.25Whr (2-6 hours)',
-    price: '$999-$1,499',
-    releaseDate: '2023-07-15',
-    imageUrl: '/images/ayaneo-2s.jpg'
+    name: "AYANEO 2S",
+    brand: "AYANEO",
+    price: "$999-$1,499",
+    releaseYear: "2023",
+    performanceScore: "High",
+    imageURL: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400"
+  },
+  {
+    name: "Retroid Pocket 4 Pro",
+    brand: "Retroid",
+    price: "$199",
+    releaseYear: "2024",
+    performanceScore: "Medium",
+    imageURL: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400"
+  },
+  {
+    name: "Miyoo Mini Plus",
+    brand: "Miyoo",
+    price: "$79",
+    releaseYear: "2023",
+    performanceScore: "Low",
+    imageURL: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400"
+  },
+  {
+    name: "Anbernic RG35XX",
+    brand: "Anbernic",
+    price: "$59",
+    releaseYear: "2022",
+    performanceScore: "Low",
+    imageURL: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400"
   }
 ]
 
+function isValidHandheldData(handheld: Handheld): boolean {
+  // Check if the data looks like valid handheld information
+  const validBrands = ['Valve', 'ASUS', 'Lenovo', 'Nintendo', 'AYANEO', 'Retroid', 'Miyoo', 'Anbernic', 'Steam', 'ROG', 'Legion']
+  const validPerformanceScores = ['High', 'Medium', 'Low']
+  
+  // Check if brand is in our known list
+  const hasValidBrand = validBrands.some(brand => 
+    handheld.brand.toLowerCase().includes(brand.toLowerCase())
+  )
+  
+  // Check if performance score is valid
+  const hasValidPerformanceScore = validPerformanceScores.some(score => 
+    handheld.performanceScore.toLowerCase().includes(score.toLowerCase())
+  )
+  
+  // Check if price looks like a real price (must contain $)
+  const hasValidPrice = handheld.price.includes('$')
+  
+  // Check if release year is a 4-digit year
+  const hasValidReleaseYear = /^\d{4}$/.test(handheld.releaseYear)
+  
+  // All conditions must be met for valid data
+  return hasValidBrand && hasValidPerformanceScore && hasValidPrice && hasValidReleaseYear
+}
+
+async function fetchFromGoogleSheets(): Promise<Handheld[]> {
+  const spreadsheetId = '1RUNo61MCcR6FJbMU2fOkJ2OCXNWtY-4cQ1J6F-KcGdo'
+  const range = 'A:F' // Assuming columns A-F contain our data
+  
+  // For public sheets, we can use a simple fetch
+  const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&range=${range}`
+  
+  try {
+    const response = await fetch(url)
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    
+    const csvText = await response.text()
+    const lines = csvText.split('\n').filter(line => line.trim() !== '')
+    
+    // Skip header row and parse data
+    const handhelds: Handheld[] = []
+    
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i]
+      // Parse CSV line (handle quoted values)
+      const values: string[] = []
+      let current = ''
+      let inQuotes = false
+      
+      for (let j = 0; j < line.length; j++) {
+        const char = line[j]
+        if (char === '"') {
+          inQuotes = !inQuotes
+        } else if (char === ',' && !inQuotes) {
+          values.push(current.trim())
+          current = ''
+        } else {
+          current += char
+        }
+      }
+      values.push(current.trim()) // Add the last value
+      
+      // Filter out entries that don't have proper data
+      if (values.length >= 6 && 
+          values[0] && values[0].trim() !== '' && 
+          values[1] && values[1].trim() !== '' &&
+          !values[0].includes('Donations') &&
+          !values[0].includes('Handheld') &&
+          values[0].length < 100) { // Avoid very long entries that might be headers
+        
+        const handheld: Handheld = {
+          name: values[0].replace(/"/g, '').trim() || '',
+          brand: values[1].replace(/"/g, '').trim() || '',
+          price: values[2].replace(/"/g, '').trim() || '',
+          releaseYear: values[3].replace(/"/g, '').trim() || '',
+          performanceScore: values[4].replace(/"/g, '').trim() || '',
+          imageURL: values[5].replace(/"/g, '').trim() || ''
+        }
+        
+        // Only add if it looks like valid handheld data
+        if (isValidHandheldData(handheld)) {
+          handhelds.push(handheld)
+        }
+      }
+    }
+    
+    // Filter out duplicates and clean up the data
+    const uniqueHandhelds = handhelds.filter((handheld, index, self) => 
+      index === self.findIndex(h => h.name === handheld.name && h.brand === handheld.brand)
+    ).filter(handheld => 
+      handheld.name && 
+      handheld.brand && 
+      handheld.name.length > 0 && 
+      handheld.brand.length > 0 &&
+      !handheld.name.includes('undefined') &&
+      !handheld.brand.includes('undefined')
+    )
+    
+    // If we don't get valid data from the sheet, return fallback data
+    if (uniqueHandhelds.length === 0) {
+      console.log('No valid data found in Google Sheet, using fallback data')
+      return fallbackHandhelds
+    }
+    
+    return uniqueHandhelds
+  } catch (error) {
+    console.error('Error fetching from Google Sheets:', error)
+    console.log('Using fallback data due to error')
+    return fallbackHandhelds
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
-    // For now, return mock data
-    // TODO: Implement Google Sheets integration
-    return NextResponse.json(mockHandhelds)
+    const now = Date.now()
     
-    /* 
-    // Google Sheets integration (commented out for now)
-    const auth = new google.auth.GoogleAuth({
-      credentials: {
-        client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      },
-      scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
-    })
-
-    const sheets = google.sheets({ version: 'v4', auth })
-    
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: process.env.GOOGLE_SHEET_ID,
-      range: 'Handhelds!A2:J', // Assuming headers are in row 1
-    })
-
-    const rows = response.data.values
-    if (!rows || rows.length === 0) {
-      return NextResponse.json({ error: 'No data found' }, { status: 404 })
+    // Check if we have valid cached data
+    if (cachedData && (now - cacheTimestamp) < CACHE_DURATION) {
+      return NextResponse.json(cachedData, {
+        headers: {
+          'Cache-Control': 'public, max-age=3600', // 1 hour
+          'X-Cache': 'HIT'
+        }
+      })
     }
-
-    const handhelds = rows.map((row, index) => ({
-      id: (index + 1).toString(),
-      name: row[0] || '',
-      brand: row[1] || '',
-      processor: row[2] || '',
-      ram: row[3] || '',
-      storage: row[4] || '',
-      display: row[5] || '',
-      battery: row[6] || '',
-      price: row[7] || '',
-      releaseDate: row[8] || '',
-      imageUrl: row[9] || '',
-    }))
-
-    return NextResponse.json(handhelds)
-    */
+    
+    // Fetch fresh data from Google Sheets
+    const handhelds = await fetchFromGoogleSheets()
+    
+    // Update cache
+    cachedData = handhelds
+    cacheTimestamp = now
+    
+    return NextResponse.json(handhelds, {
+      headers: {
+        'Cache-Control': 'public, max-age=3600', // 1 hour
+        'X-Cache': 'MISS'
+      }
+    })
+    
   } catch (error) {
     console.error('Error fetching handheld data:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch handheld data' },
-      { status: 500 }
-    )
+    
+    // Return cached data if available, even if expired
+    if (cachedData) {
+      return NextResponse.json(cachedData, {
+        headers: {
+          'Cache-Control': 'public, max-age=3600',
+          'X-Cache': 'STALE'
+        }
+      })
+    }
+    
+    // Return fallback data if no cache available
+    return NextResponse.json(fallbackHandhelds, {
+      headers: {
+        'Cache-Control': 'public, max-age=3600',
+        'X-Cache': 'FALLBACK'
+      }
+    })
   }
 } 

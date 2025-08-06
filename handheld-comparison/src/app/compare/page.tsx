@@ -4,17 +4,12 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
 interface Handheld {
-  id: string
   name: string
   brand: string
-  processor: string
-  ram: string
-  storage: string
-  display: string
-  battery: string
   price: string
-  releaseDate: string
-  imageUrl?: string
+  releaseYear: string
+  performanceScore: string
+  imageURL: string
 }
 
 export default function ComparePage() {
@@ -43,15 +38,15 @@ export default function ComparePage() {
     }
   }
 
-  const toggleHandheldSelection = (id: string) => {
+  const toggleHandheldSelection = (name: string) => {
     setSelectedHandhelds(prev => 
-      prev.includes(id) 
-        ? prev.filter(h => h !== id)
-        : [...prev, id]
+      prev.includes(name) 
+        ? prev.filter(h => h !== name)
+        : [...prev, name]
     )
   }
 
-  const selectedHandheldData = handhelds.filter(h => selectedHandhelds.includes(h.id))
+  const selectedHandheldData = handhelds.filter(h => selectedHandhelds.includes(h.name))
 
   if (loading) {
     return (
@@ -113,19 +108,19 @@ export default function ComparePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {handhelds.map((handheld) => (
               <div 
-                key={handheld.id}
+                key={handheld.name}
                 className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                  selectedHandhelds.includes(handheld.id)
+                  selectedHandhelds.includes(handheld.name)
                     ? 'border-blue-500 bg-blue-50'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
-                onClick={() => toggleHandheldSelection(handheld.id)}
+                onClick={() => toggleHandheldSelection(handheld.name)}
               >
                 <div className="flex items-center space-x-3">
                   <input
                     type="checkbox"
-                    checked={selectedHandhelds.includes(handheld.id)}
-                    onChange={() => toggleHandheldSelection(handheld.id)}
+                    checked={selectedHandhelds.includes(handheld.name)}
+                    onChange={() => toggleHandheldSelection(handheld.name)}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
                   <div>
@@ -149,7 +144,7 @@ export default function ComparePage() {
                       Specification
                     </th>
                     {selectedHandheldData.map((handheld) => (
-                      <th key={handheld.id} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th key={handheld.name} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         {handheld.name}
                       </th>
                     ))}
@@ -159,64 +154,51 @@ export default function ComparePage() {
                   <tr>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Brand</td>
                     {selectedHandheldData.map((handheld) => (
-                      <td key={handheld.id} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td key={handheld.name} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {handheld.brand}
-                      </td>
-                    ))}
-                  </tr>
-                  <tr>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Processor</td>
-                    {selectedHandheldData.map((handheld) => (
-                      <td key={handheld.id} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {handheld.processor}
-                      </td>
-                    ))}
-                  </tr>
-                  <tr>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">RAM</td>
-                    {selectedHandheldData.map((handheld) => (
-                      <td key={handheld.id} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {handheld.ram}
-                      </td>
-                    ))}
-                  </tr>
-                  <tr>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Storage</td>
-                    {selectedHandheldData.map((handheld) => (
-                      <td key={handheld.id} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {handheld.storage}
-                      </td>
-                    ))}
-                  </tr>
-                  <tr>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Display</td>
-                    {selectedHandheldData.map((handheld) => (
-                      <td key={handheld.id} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {handheld.display}
-                      </td>
-                    ))}
-                  </tr>
-                  <tr>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Battery</td>
-                    {selectedHandheldData.map((handheld) => (
-                      <td key={handheld.id} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {handheld.battery}
                       </td>
                     ))}
                   </tr>
                   <tr>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Price</td>
                     {selectedHandheldData.map((handheld) => (
-                      <td key={handheld.id} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td key={handheld.name} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {handheld.price}
                       </td>
                     ))}
                   </tr>
                   <tr>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Release Date</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Release Year</td>
                     {selectedHandheldData.map((handheld) => (
-                      <td key={handheld.id} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {handheld.releaseDate}
+                      <td key={handheld.name} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {handheld.releaseYear}
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Performance Score</td>
+                    {selectedHandheldData.map((handheld) => (
+                      <td key={handheld.name} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {handheld.performanceScore}
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Image</td>
+                    {selectedHandheldData.map((handheld) => (
+                      <td key={handheld.name} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {handheld.imageURL ? (
+                          <a 
+                            href={handheld.imageURL} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 underline"
+                          >
+                            View Image
+                          </a>
+                        ) : (
+                          'No image available'
+                        )}
                       </td>
                     ))}
                   </tr>
