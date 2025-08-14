@@ -36,14 +36,12 @@ export default function ComparePage() {
       })
       
       clearTimeout(timeoutId)
-      console.log('Response status:', response.status)
       
       if (!response.ok) {
         throw new Error(`Failed to fetch handheld data: ${response.status}`)
       }
       
       const data = await response.json()
-      console.log('Fetched data:', data)
       setHandhelds(data)
     } catch (err) {
       console.error('Error fetching handhelds:', err)

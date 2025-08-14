@@ -16,94 +16,96 @@ interface Handheld {
 
 async function fetchFromGoogleSheets(): Promise<Handheld[]> {
   const spreadsheetId = '1RUNo61MCcR6FJbMU2fOkJ2OCXNWtY-4cQ1J6F-KcGdo'
-  const range = 'A2:F11' // First 10 rows (skip header row)
   
-  // For public sheets, we can use a simple fetch
-  const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&range=${range}`
+  // Fetch data in chunks to avoid concatenation issues with large ranges
+  const allHandhelds: Handheld[] = []
+  const chunkSize = 100
+  const maxRows = 510
   
-  try {
-    const response = await fetch(url)
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
+  for (let startRow = 2; startRow <= maxRows; startRow += chunkSize) {
+    const endRow = Math.min(startRow + chunkSize - 1, maxRows)
+    const range = `A${startRow}:F${endRow}`
+    const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&range=${range}`
     
-    const csvText = await response.text()
+    try {
+      const response = await fetch(url)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const csvText = await response.text()
+      
+      // Use a simple line-by-line approach for better reliability
+      const handhelds: Handheld[] = []
     
-    // Reconstruct complete rows by handling newlines within quoted fields
-    const handhelds: Handheld[] = []
+    // Split by lines first - this will give us each logical CSV row
     const lines = csvText.split('\n')
     
-    let currentRow = ''
-    let inQuotes = false
-    let rowCount = 0
-    
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i]
+    for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+      let line = lines[lineIndex].trim()
+      if (!line) continue
       
-      // Count quotes in this line
-      const quoteCount = (line.match(/"/g) || []).length
-      inQuotes = inQuotes ? (quoteCount % 2 === 0) : (quoteCount % 2 === 1)
+      // Handle multi-line quoted fields by continuing to read lines
+      // until we have balanced quotes
+      let quoteCount = (line.match(/"/g) || []).length
+      while (quoteCount % 2 !== 0 && lineIndex + 1 < lines.length) {
+        lineIndex++
+        line += '\n' + lines[lineIndex]
+        quoteCount = (line.match(/"/g) || []).length
+      }
       
-      currentRow += line + '\n'
+      // Parse this complete row
+      const values: string[] = []
+      let current = ''
+      let inQuotes = false
       
-      // If we're not in quotes, we have a complete row
-      if (!inQuotes && currentRow.trim()) {
-        // Parse the complete row
-        const values: string[] = []
-        let current = ''
-        let inFieldQuotes = false
-        let j = 0
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i]
         
-        while (j < currentRow.length) {
-          const char = currentRow[j]
-          
-          if (char === '"') {
-            if (inFieldQuotes && j + 1 < currentRow.length && currentRow[j + 1] === '"') {
-              // Handle escaped quotes
-              current += '"'
-              j += 2
-            } else {
-              inFieldQuotes = !inFieldQuotes
-              j++
-            }
-          } else if (char === ',' && !inFieldQuotes) {
-            values.push(current.trim())
-            current = ''
-            j++
+        if (char === '"') {
+          if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
+            // Handle escaped quotes
+            current += '"'
+            i++ // Skip the next quote
           } else {
-            current += char
-            j++
+            inQuotes = !inQuotes
           }
+        } else if (char === ',' && !inQuotes) {
+          values.push(current.trim())
+          current = ''
+        } else {
+          current += char
         }
-        values.push(current.trim()) // Add the last value
+      }
+      values.push(current.trim()) // Add the last value
+      
+      // Map columns: A=Image (empty), B=Name, C=Brand, D=Released, E=Form Factor, F=OS
+      // Only require name to be present, use TBA for missing data
+      if (values.length >= 2 && values[1] && values[1].trim() !== '') {
         
-        // Map columns: A=Image (empty), B=Name, C=Brand, D=Released, E=Form Factor, F=OS
-        if (values.length >= 6 && 
-            values[1] && values[1].trim() !== '' && 
-            values[2] && values[2].trim() !== '') {
-          
-          const handheld: Handheld = {
-            name: values[1].replace(/"/g, '').trim() || '', // Column B: Name
-            brand: values[2].replace(/"/g, '').trim() || '', // Column C: Brand
-            price: 'TBD', // No price column, set as TBD
-            releaseYear: values[3].replace(/"/g, '').trim() || '', // Column D: Released
-            performanceScore: values[4].replace(/"/g, '').trim() || '', // Column E: Form Factor
-            imageURL: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400' // Default image since column A is empty
-          }
-          
-          handhelds.push(handheld)
+        const handheld: Handheld = {
+          name: values[1].replace(/"/g, '').trim() || 'TBA', // Column B: Name
+          brand: values[2] ? values[2].replace(/"/g, '').trim() || 'TBA' : 'TBA', // Column C: Brand
+          price: 'TBA', // No price column, set as TBA
+          releaseYear: values[3] ? values[3].replace(/"/g, '').trim() || 'TBA' : 'TBA', // Column D: Released
+          performanceScore: values[4] ? values[4].replace(/"/g, '').trim() || 'TBA' : 'TBA', // Column E: Form Factor
+          imageURL: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400' // Default image since column A is empty
         }
         
-        currentRow = ''
-        rowCount++
+        handhelds.push(handheld)
       }
     }
     
-    return handhelds
-  } catch (error) {
-    console.error('Error fetching from Google Sheets:', error)
-    throw error
+    // Add this chunk's handhelds to the total
+    allHandhelds.push(...handhelds)
+    
+    } catch (error) {
+      console.error(`Error fetching chunk ${range}:`, error)
+      // Continue with other chunks even if one fails
+    }
   }
+  
+  return allHandhelds
 }
 
 export async function GET(request: NextRequest) {
