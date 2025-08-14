@@ -112,8 +112,11 @@ export async function GET(request: NextRequest) {
   try {
     const now = Date.now()
     
-    // Check if we have valid cached data
-    if (cachedData && (now - cacheTimestamp) < CACHE_DURATION) {
+    // Check if we have valid cached data (but allow cache bypass for testing)
+    const url = new URL(request.url)
+    const bypassCache = url.searchParams.get('bypass') === 'true'
+    
+    if (!bypassCache && cachedData && (now - cacheTimestamp) < CACHE_DURATION) {
       return NextResponse.json(cachedData, {
         headers: {
           'Cache-Control': 'public, max-age=3600', // 1 hour

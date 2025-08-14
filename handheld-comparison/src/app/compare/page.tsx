@@ -24,7 +24,6 @@ export default function ComparePage() {
 
   const fetchHandhelds = async () => {
     try {
-      console.log('Starting to fetch handheld data...')
       setLoading(true)
       
       // Add timeout to the fetch
@@ -32,7 +31,12 @@ export default function ComparePage() {
       const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
       
       const response = await fetch('/api/handhelds', {
-        signal: controller.signal
+        signal: controller.signal,
+        cache: 'no-cache',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
       })
       
       clearTimeout(timeoutId)
@@ -42,6 +46,7 @@ export default function ComparePage() {
       }
       
       const data = await response.json()
+      console.log(`✅ Frontend received ${data.length} handhelds`)
       setHandhelds(data)
     } catch (err) {
       console.error('Error fetching handhelds:', err)
