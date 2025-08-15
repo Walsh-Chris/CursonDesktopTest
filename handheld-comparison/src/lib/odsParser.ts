@@ -49,11 +49,13 @@ export async function parseODSFile(filePath: string): Promise<Handheld[]> {
     
     // Save extracted images
     const imageMap: { [key: string]: string } = {}
+    console.log(`Found ${imageEntries.length} images in ODS file`)
     imageEntries.forEach((entry, index) => {
       const imageName = `device_${index + 1}${path.extname(entry.entryName)}`
       const imagePath = path.join(publicImagesDir, imageName)
       fs.writeFileSync(imagePath, entry.getData())
       imageMap[entry.entryName] = `/handheld-images/${imageName}`
+      console.log(`Extracted image: ${entry.entryName} -> ${imageName}`)
     })
     
     // Parse XML content
@@ -64,18 +66,35 @@ export async function parseODSFile(filePath: string): Promise<Handheld[]> {
     const rows = doc.getElementsByTagName('table:table-row')
     const handhelds: Handheld[] = []
     
+    // Create a mapping of row index to image references
+    const rowImageMap: { [key: number]: string } = {}
+    
     // Skip header row (index 0), start from index 1
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i]
       const cells = row.getElementsByTagName('table:table-cell')
       
       if (cells.length >= 6) {
-        // Extract text values from cells
+        // Extract text values from cells and check for images
         const values: string[] = []
+        let hasImageInColumnA = false
+        
         for (let j = 0; j < 6; j++) {
           const cell = cells[j]
           const textElements = cell.getElementsByTagName('text:p')
           let cellValue = ''
+          
+          // Check for images in Column A (j === 0)
+          if (j === 0) {
+            const images = cell.getElementsByTagName('draw:image')
+            if (images.length > 0) {
+              hasImageInColumnA = true
+              const imageRef = images[0].getAttribute('xlink:href')
+              if (imageRef) {
+                rowImageMap[i] = imageRef
+              }
+            }
+          }
           
           if (textElements.length > 0) {
             cellValue = textElements[0].textContent || ''
@@ -84,33 +103,49 @@ export async function parseODSFile(filePath: string): Promise<Handheld[]> {
           values.push(cellValue.trim())
         }
         
-        // Map columns based on your spreadsheet structure
-        const deviceName = values[1] // Column B: Name
-        if (deviceName && deviceName !== '') {
+        // Map columns: A=Image, B=Name, C=Brand, D=Released, E=Form Factor, F=OS
+        const deviceName = values[1] ? values[1].trim() : '' // Column B: Name
+        const imageColumnA = values[0] ? values[0].trim() : '' // Column A: Image reference
+        
+        // Only process rows with valid device names (not just numbers or empty)
+        if (deviceName && deviceName !== '' && deviceName !== 'TBA' && 
+            !deviceName.match(/^\d+$/) && // Skip rows that are just numbers
+            deviceName.length > 1) { // Skip single character names
           
-          // Try to find corresponding image
-          let imageURL = '/handheld-images/default.jpg' // Default image
+          // Determine image URL based on Column A or use placeholder
+          let imageURL = 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400' // Default placeholder
           
-          // Look for images by index or try to match by name
-          const imageIndex = i - 1 // Adjust for header row
-          if (imageMap[`Pictures/image${imageIndex}.jpg`]) {
-            imageURL = imageMap[`Pictures/image${imageIndex}.jpg`]
-          } else if (imageMap[`Pictures/image${imageIndex}.png`]) {
-            imageURL = imageMap[`Pictures/image${imageIndex}.png`]
-          } else {
-            // Try to find any available image
+          // If this row has an image in Column A, use it
+          if (hasImageInColumnA && rowImageMap[i]) {
+            const imageRef = rowImageMap[i]
+            // Check if we have this image in our imageMap
+            if (imageMap[imageRef]) {
+              imageURL = imageMap[imageRef]
+            } else {
+              // Try to find image by reference name
+              const imageName = imageRef.split('/').pop()
+              const matchingImage = Object.keys(imageMap).find(key => 
+                key.includes(imageName || '')
+              )
+              if (matchingImage) {
+                imageURL = imageMap[matchingImage]
+              }
+            }
+          } else if (imageColumnA && imageColumnA !== '' && imageColumnA !== 'TBA') {
+            // Fallback: Use extracted images in order if Column A has some reference
+            const imageIndex = i - 1 // Adjust for header row
             const availableImages = Object.values(imageMap)
-            if (availableImages.length > 0) {
-              imageURL = availableImages[imageIndex % availableImages.length]
+            if (availableImages.length > imageIndex && imageIndex >= 0) {
+              imageURL = availableImages[imageIndex]
             }
           }
           
           const handheld: Handheld = {
             name: deviceName,
-            brand: values[2] || 'TBA', // Column C: Brand
-            price: 'TBA', // Not in current structure
-            releaseYear: values[3] || 'TBA', // Column D: Released
-            performanceScore: values[4] || 'TBA', // Column E: Form Factor
+            brand: values[2] && values[2].trim() !== '' ? values[2].trim() : 'TBA', // Column C: Brand
+            price: 'TBA', // No price column in current structure
+            releaseYear: values[3] && values[3].trim() !== '' ? values[3].trim() : 'TBA', // Column D: Released
+            performanceScore: values[4] && values[4].trim() !== '' ? values[4].trim() : 'TBA', // Column E: Form Factor
             imageURL: imageURL
           }
           

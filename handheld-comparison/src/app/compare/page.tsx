@@ -27,7 +27,15 @@ export default function ComparePage() {
     try {
       setLoading(true)
       
-      const response = await fetch('/api/handhelds')
+      // Add cache busting to ensure we get fresh data with new images
+      const timestamp = new Date().getTime()
+      const response = await fetch(`/api/handhelds?t=${timestamp}`, {
+        cache: 'no-cache',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      })
       
       if (!response.ok) {
         throw new Error(`Failed to fetch handheld data: ${response.status}`)
@@ -35,6 +43,7 @@ export default function ComparePage() {
       
       const data = await response.json()
       console.log(`✅ Frontend received ${data.length} handhelds`)
+      console.log('First 3 image URLs:', data.slice(0, 3).map((h: any) => `${h.name}: ${h.imageURL}`))
       setHandhelds(data)
     } catch (err) {
       console.error('Error fetching handhelds:', err)
@@ -195,6 +204,7 @@ export default function ComparePage() {
                                     className="max-w-full max-h-full object-contain rounded-lg"
                                     onError={(e) => {
                                       const target = e.target as HTMLImageElement;
+                                      console.log(`Image failed to load: ${target.src} for ${handheld.name}`);
                                       target.src = 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400';
                                     }}
                                   />
@@ -231,6 +241,7 @@ export default function ComparePage() {
                                           className="max-w-full max-h-full object-contain rounded-lg"
                                           onError={(e) => {
                                             const target = e.target as HTMLImageElement;
+                                            console.log(`Image failed to load: ${target.src} for ${handheld.name}`);
                                             target.src = 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400';
                                           }}
                                         />
@@ -291,6 +302,7 @@ export default function ComparePage() {
                                           className="max-w-full max-h-full object-contain rounded-lg"
                                           onError={(e) => {
                                             const target = e.target as HTMLImageElement;
+                                            console.log(`Image failed to load: ${target.src} for ${handheld.name}`);
                                             target.src = 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400';
                                           }}
                                         />

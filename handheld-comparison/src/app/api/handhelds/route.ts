@@ -63,7 +63,12 @@ async function fetchFromODSFile(): Promise<Handheld[]> {
   try {
     // Try to parse ODS file first
     const handhelds = await parseODSFile(odsFilePath)
-    return handhelds
+    
+    // Limit to 505 entries (rows 2-506 in the spreadsheet)
+    const limitedHandhelds = handhelds.slice(0, 505)
+    console.log(`📊 ODS file parsed: ${handhelds.length} total, limited to ${limitedHandhelds.length} consoles`)
+    
+    return limitedHandhelds
   } catch (error) {
     console.error('Error parsing ODS file, falling back to Google Sheets:', error)
     
