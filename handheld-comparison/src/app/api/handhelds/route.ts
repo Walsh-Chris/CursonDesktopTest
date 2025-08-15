@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { parseODSFile } from '@/lib/odsParser'
+import path from 'path'
 
 // Cache for storing the response
 let cachedData: Handheld[] | null = null
@@ -55,7 +57,22 @@ function getDeviceImageURL(deviceName: string): string {
   return 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400'
 }
 
-async function fetchFromGoogleSheets(): Promise<Handheld[]> {
+async function fetchFromODSFile(): Promise<Handheld[]> {
+  const odsFilePath = path.join(process.cwd(), 'data', 'handhelds.ods')
+  
+  try {
+    // Try to parse ODS file first
+    const handhelds = await parseODSFile(odsFilePath)
+    return handhelds
+  } catch (error) {
+    console.error('Error parsing ODS file, falling back to Google Sheets:', error)
+    
+    // Fallback to Google Sheets if ODS file fails
+    return await fetchFromGoogleSheetsBackup()
+  }
+}
+
+async function fetchFromGoogleSheetsBackup(): Promise<Handheld[]> {
   const spreadsheetId = '1RUNo61MCcR6FJbMU2fOkJ2OCXNWtY-4cQ1J6F-KcGdo'
   
   // Fetch data in chunks to avoid concatenation issues with large ranges
@@ -166,8 +183,8 @@ export async function GET(request: NextRequest) {
       })
     }
     
-    // Fetch fresh data from Google Sheets
-    const handhelds = await fetchFromGoogleSheets()
+    // Fetch fresh data from ODS file (with Google Sheets fallback)
+    const handhelds = await fetchFromODSFile()
     
     // Update cache
     cachedData = handhelds
