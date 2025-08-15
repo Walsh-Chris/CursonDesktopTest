@@ -44,7 +44,25 @@ export default function ComparePage() {
       const data = await response.json()
       console.log(`✅ Frontend received ${data.length} handhelds`)
       console.log('First 3 image URLs:', data.slice(0, 3).map((h: any) => `${h.name}: ${h.imageURL}`))
-      setHandhelds(data)
+      
+      // Remove duplicates based on name to fix React key conflicts
+      const duplicateNames = data
+        .map((h: any) => h.name)
+        .filter((name: string, index: number, arr: string[]) => arr.indexOf(name) !== index)
+      
+      if (duplicateNames.length > 0) {
+        console.log(`⚠️ Found duplicate device names:`, [...new Set(duplicateNames)])
+      }
+      
+      const uniqueHandhelds = data.filter((handheld: any, index: number, self: any[]) => 
+        index === self.findIndex((h: any) => h.name === handheld.name)
+      )
+      
+      if (uniqueHandhelds.length !== data.length) {
+        console.log(`🔧 Removed ${data.length - uniqueHandhelds.length} duplicate devices`)
+      }
+      
+      setHandhelds(uniqueHandhelds)
     } catch (err) {
       console.error('Error fetching handhelds:', err)
       setError(err instanceof Error ? err.message : 'An error occurred')
@@ -62,12 +80,22 @@ export default function ComparePage() {
   }
 
   // Filter handhelds based on search query
-  const filteredHandhelds = handhelds.filter(handheld => 
-    handheld.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    handheld.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    handheld.releaseYear.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    handheld.performanceScore.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredHandhelds = handhelds.filter(handheld => {
+    const query = searchQuery.toLowerCase()
+    const nameMatch = handheld.name.toLowerCase().includes(query)
+    const brandMatch = handheld.brand.toLowerCase().includes(query)
+    const releaseMatch = handheld.releaseYear.toLowerCase().includes(query)
+    const performanceMatch = handheld.performanceScore.toLowerCase().includes(query)
+    
+    const isMatch = nameMatch || brandMatch || releaseMatch || performanceMatch
+    
+    // Debug logging for search
+    if (isMatch && searchQuery.length > 2) {
+      console.log(`Match found: ${handheld.name} - Name:${nameMatch} Brand:${brandMatch} Release:${releaseMatch} Performance:${performanceMatch}`)
+    }
+    
+    return isMatch
+  })
 
   const selectedHandheldData = handhelds.filter(h => selectedHandhelds.includes(h.name))
 
