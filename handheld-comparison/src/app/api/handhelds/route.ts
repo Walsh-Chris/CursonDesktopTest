@@ -14,6 +14,47 @@ interface Handheld {
   imageURL: string
 }
 
+function getDeviceImageURL(deviceName: string): string {
+  // Map specific devices to real images
+  const deviceImageMap: { [key: string]: string } = {
+    'XU20 V32': 'https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=400',
+    'Mangmi Air X': 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400',
+    'One 35': 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=400',
+    'Flip 1S': 'https://images.unsplash.com/photo-1593642532973-d31b6557fa68?w=400',
+    'ROG Ally': 'https://images.unsplash.com/photo-1612198762602-fcdbac833d40?w=400',
+    'ROG Ally X': 'https://images.unsplash.com/photo-1612198762602-fcdbac833d40?w=400',
+    'Steam Deck': 'https://images.unsplash.com/photo-1612198762602-fcdbac833d40?w=400',
+    'Steam Deck OLED': 'https://images.unsplash.com/photo-1612198762602-fcdbac833d40?w=400',
+    'Legion Go': 'https://images.unsplash.com/photo-1545665225-b23b99e4d45e?w=400',
+    'Legion Go Gen 2': 'https://images.unsplash.com/photo-1545665225-b23b99e4d45e?w=400'
+  }
+  
+  // Check for exact match first
+  if (deviceImageMap[deviceName]) {
+    return deviceImageMap[deviceName]
+  }
+  
+  // Check for partial matches
+  const deviceLower = deviceName.toLowerCase()
+  
+  if (deviceLower.includes('steam deck')) {
+    return 'https://images.unsplash.com/photo-1612198762602-fcdbac833d40?w=400'
+  } else if (deviceLower.includes('rog ally') || deviceLower.includes('asus')) {
+    return 'https://images.unsplash.com/photo-1612198762602-fcdbac833d40?w=400'
+  } else if (deviceLower.includes('legion go') || deviceLower.includes('lenovo')) {
+    return 'https://images.unsplash.com/photo-1545665225-b23b99e4d45e?w=400'
+  } else if (deviceLower.includes('ayaneo')) {
+    return 'https://images.unsplash.com/photo-1593642532973-d31b6557fa68?w=400'
+  } else if (deviceLower.includes('retroid')) {
+    return 'https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=400'
+  } else if (deviceLower.includes('anbernic')) {
+    return 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=400'
+  }
+  
+  // Default gaming handheld image
+  return 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400'
+}
+
 async function fetchFromGoogleSheets(): Promise<Handheld[]> {
   const spreadsheetId = '1RUNo61MCcR6FJbMU2fOkJ2OCXNWtY-4cQ1J6F-KcGdo'
   
@@ -89,7 +130,7 @@ async function fetchFromGoogleSheets(): Promise<Handheld[]> {
                         price: 'TBA', // No price column, set as TBA
                         releaseYear: values[3] ? values[3].replace(/"/g, '').trim() || 'TBA' : 'TBA', // Column D: Released
                         performanceScore: values[4] ? values[4].replace(/"/g, '').trim() || 'TBA' : 'TBA', // Column E: Form Factor
-                        imageURL: values[0] ? values[0].replace(/"/g, '').trim() : 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400' // Column A: Image or default
+                        imageURL: values[0] ? values[0].replace(/"/g, '').trim() : getDeviceImageURL(values[1]) // Column A: Image or generate based on device name
                       }
         
         handhelds.push(handheld)
