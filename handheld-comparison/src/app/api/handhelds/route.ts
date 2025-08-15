@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 // Cache for storing the response
-let cachedData: any = null
+let cachedData: Handheld[] | null = null
 let cacheTimestamp: number = 0
 const CACHE_DURATION = 60 * 60 * 1000 // 1 hour in milliseconds
 

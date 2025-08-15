@@ -17,6 +17,7 @@ export default function ComparePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedHandhelds, setSelectedHandhelds] = useState<string[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     fetchHandhelds()
@@ -67,6 +68,14 @@ export default function ComparePage() {
         : [...prev, name]
     )
   }
+
+  // Filter handhelds based on search query
+  const filteredHandhelds = handhelds.filter(handheld => 
+    handheld.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    handheld.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    handheld.releaseYear.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    handheld.performanceScore.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   const selectedHandheldData = handhelds.filter(h => selectedHandhelds.includes(h.name))
 
@@ -124,11 +133,62 @@ export default function ComparePage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Device Selection */}
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Select Devices to Compare</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {handhelds.map((handheld) => (
+                            {/* Device Selection */}
+                    <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
+                      <h2 className="text-xl font-semibold text-gray-900 mb-4">Select Devices to Compare</h2>
+                      
+                      {/* Search Bar */}
+                      <div className="mb-6">
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                          </div>
+                          <input
+                            type="text"
+                            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            placeholder="Search by name, brand, year, or form factor..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                          />
+                          {searchQuery && (
+                            <button
+                              onClick={() => setSearchQuery('')}
+                              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                            >
+                              <svg className="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                        {searchQuery && (
+                          <p className="mt-2 text-sm text-gray-600">
+                            Showing {filteredHandhelds.length} of {handhelds.length} devices
+                          </p>
+                        )}
+                      </div>
+                      
+                      {filteredHandhelds.length === 0 ? (
+                        <div className="text-center py-12">
+                          <div className="text-gray-400 mb-4">
+                            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                          </div>
+                          <h3 className="text-lg font-medium text-gray-900 mb-2">No devices found</h3>
+                          <p className="text-gray-500 mb-4">Try adjusting your search terms or clearing the search.</p>
+                          <button
+                            onClick={() => setSearchQuery('')}
+                            className="text-blue-600 hover:text-blue-700 font-medium"
+                          >
+                            Clear search
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {filteredHandhelds.map((handheld) => (
               <div 
                 key={handheld.name}
                 className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
@@ -148,11 +208,12 @@ export default function ComparePage() {
                   <div>
                     <h3 className="font-medium text-gray-900">{handheld.name}</h3>
                     <p className="text-sm text-gray-500">{handheld.brand}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Comparison Table */}

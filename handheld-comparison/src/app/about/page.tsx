@@ -50,7 +50,7 @@ export default function AboutPage() {
             <h3 className="text-xl font-semibold text-gray-900 mb-4">Data Sources</h3>
             <p className="text-gray-600 mb-6">
               Our data is sourced from official manufacturer specifications, independent testing, and community contributions. 
-              We maintain a Google Sheets database that's regularly updated with the latest information to ensure accuracy 
+              We maintain a Google Sheets database that&apos;s regularly updated with the latest information to ensure accuracy 
               and timeliness.
             </p>
 
