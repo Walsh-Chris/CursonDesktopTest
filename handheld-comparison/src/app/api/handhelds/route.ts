@@ -58,7 +58,7 @@ function getDeviceImageURL(deviceName: string): string {
 }
 
 async function fetchFromODSFile(): Promise<Handheld[]> {
-  const odsFilePath = path.join(process.cwd(), 'data', 'handhelds.ods')
+  const odsFilePath = path.join(process.cwd(), 'data', 'Handhelds.ods')
   
   try {
     // Try to parse ODS file first
@@ -173,12 +173,17 @@ export async function GET(request: NextRequest) {
     // Check if we have valid cached data (but allow cache bypass for testing)
     const url = new URL(request.url)
     const bypassCache = url.searchParams.get('bypass') === 'true'
+    const limit = url.searchParams.get('limit') ? parseInt(url.searchParams.get('limit')!) : null
     
     if (!bypassCache && cachedData && (now - cacheTimestamp) < CACHE_DURATION) {
-      return NextResponse.json(cachedData, {
+      const resultData = limit ? cachedData.slice(0, limit) : cachedData
+      console.log(`📊 Cache HIT: returning ${resultData.length} of ${cachedData.length} total handhelds`)
+      return NextResponse.json(resultData, {
         headers: {
           'Cache-Control': 'public, max-age=3600', // 1 hour
-          'X-Cache': 'HIT'
+          'X-Cache': 'HIT',
+          'X-Total-Count': cachedData.length.toString(),
+          'X-Returned-Count': resultData.length.toString()
         }
       })
     }
@@ -190,10 +195,16 @@ export async function GET(request: NextRequest) {
     cachedData = handhelds
     cacheTimestamp = now
     
-    return NextResponse.json(handhelds, {
+    // Apply limit if specified
+    const resultData = limit ? handhelds.slice(0, limit) : handhelds
+    console.log(`📊 Cache MISS: returning ${resultData.length} of ${handhelds.length} total handhelds`)
+    
+    return NextResponse.json(resultData, {
       headers: {
         'Cache-Control': 'public, max-age=3600', // 1 hour
-        'X-Cache': 'MISS'
+        'X-Cache': 'MISS',
+        'X-Total-Count': handhelds.length.toString(),
+        'X-Returned-Count': resultData.length.toString()
       }
     })
     

@@ -13,6 +13,7 @@ interface Handheld {
 }
 
 export async function parseODSFile(filePath: string): Promise<Handheld[]> {
+  console.log('Attempting to parse ODS file at:', filePath)
   try {
     // Check if file exists
     if (!fs.existsSync(filePath)) {
