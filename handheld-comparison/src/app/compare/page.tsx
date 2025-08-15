@@ -203,14 +203,26 @@ export default function ComparePage() {
                     type="checkbox"
                     checked={selectedHandhelds.includes(handheld.name)}
                     onChange={() => toggleHandheldSelection(handheld.name)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded flex-shrink-0"
                   />
-                  <div>
-                    <h3 className="font-medium text-gray-900">{handheld.name}</h3>
-                    <p className="text-sm text-gray-500">{handheld.brand}</p>
-                    </div>
+                  <div className="flex-shrink-0">
+                    <img
+                      src={handheld.imageURL}
+                      alt={handheld.name}
+                      className="w-16 h-16 object-cover rounded-lg border border-gray-200"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400';
+                      }}
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-medium text-gray-900 truncate">{handheld.name}</h3>
+                    <p className="text-sm text-gray-500 truncate">{handheld.brand}</p>
+                    <p className="text-xs text-gray-400 truncate">{handheld.releaseYear}</p>
                   </div>
                 </div>
+              </div>
               ))}
             </div>
           )}
@@ -227,8 +239,24 @@ export default function ComparePage() {
                       Specification
                     </th>
                     {selectedHandheldData.map((handheld) => (
-                      <th key={handheld.name} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {handheld.name}
+                      <th key={handheld.name} className="px-6 py-3 text-center">
+                        <div className="flex flex-col items-center space-y-2">
+                          <img
+                            src={handheld.imageURL}
+                            alt={handheld.name}
+                            className="w-12 h-12 object-cover rounded-lg border border-gray-200"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400';
+                            }}
+                          />
+                          <div className="text-xs font-medium text-gray-900 text-center">
+                            {handheld.name}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {handheld.brand}
+                          </div>
+                        </div>
                       </th>
                     ))}
                   </tr>
@@ -269,19 +297,26 @@ export default function ComparePage() {
                   <tr>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Image</td>
                     {selectedHandheldData.map((handheld) => (
-                      <td key={handheld.name} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {handheld.imageURL ? (
-                          <a 
-                            href={handheld.imageURL} 
-                            target="_blank" 
+                      <td key={handheld.name} className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex flex-col items-center space-y-2">
+                          <img
+                            src={handheld.imageURL}
+                            alt={handheld.name}
+                            className="w-24 h-24 object-cover rounded-lg border border-gray-200 shadow-sm"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400';
+                            }}
+                          />
+                          <a
+                            href={handheld.imageURL}
+                            target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800 underline"
+                            className="text-xs text-blue-600 hover:text-blue-800 underline"
                           >
-                            View Image
+                            View Full Size
                           </a>
-                        ) : (
-                          'No image available'
-                        )}
+                        </div>
                       </td>
                     ))}
                   </tr>

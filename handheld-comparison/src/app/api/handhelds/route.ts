@@ -83,14 +83,14 @@ async function fetchFromGoogleSheets(): Promise<Handheld[]> {
       // Only require name to be present, use TBA for missing data
       if (values.length >= 2 && values[1] && values[1].trim() !== '') {
         
-        const handheld: Handheld = {
-          name: values[1].replace(/"/g, '').trim() || 'TBA', // Column B: Name
-          brand: values[2] ? values[2].replace(/"/g, '').trim() || 'TBA' : 'TBA', // Column C: Brand
-          price: 'TBA', // No price column, set as TBA
-          releaseYear: values[3] ? values[3].replace(/"/g, '').trim() || 'TBA' : 'TBA', // Column D: Released
-          performanceScore: values[4] ? values[4].replace(/"/g, '').trim() || 'TBA' : 'TBA', // Column E: Form Factor
-          imageURL: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400' // Default image since column A is empty
-        }
+                              const handheld: Handheld = {
+                        name: values[1].replace(/"/g, '').trim() || 'TBA', // Column B: Name
+                        brand: values[2] ? values[2].replace(/"/g, '').trim() || 'TBA' : 'TBA', // Column C: Brand
+                        price: 'TBA', // No price column, set as TBA
+                        releaseYear: values[3] ? values[3].replace(/"/g, '').trim() || 'TBA' : 'TBA', // Column D: Released
+                        performanceScore: values[4] ? values[4].replace(/"/g, '').trim() || 'TBA' : 'TBA', // Column E: Form Factor
+                        imageURL: values[0] ? values[0].replace(/"/g, '').trim() : 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400' // Column A: Image or default
+                      }
         
         handhelds.push(handheld)
       }
