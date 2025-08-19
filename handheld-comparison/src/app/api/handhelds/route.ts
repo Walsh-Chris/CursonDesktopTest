@@ -156,7 +156,8 @@ async function fetchFromGoogleSheetsBackup(): Promise<Handheld[]> {
                         price: 'TBA', // No price column, set as TBA
                         releaseYear: values[3] ? values[3].replace(/"/g, '').trim() || 'TBA' : 'TBA', // Column D: Released
                         performanceScore: values[4] ? values[4].replace(/"/g, '').trim() || 'TBA' : 'TBA', // Column E: Form Factor
-                        imageURL: values[0] ? values[0].replace(/"/g, '').trim() : getDeviceImageURL(values[1]) // Column A: Image or generate based on device name
+                        imageURL: values[0] ? values[0].replace(/"/g, '').trim() : getDeviceImageURL(values[1]), // Column A: Image or generate based on device name
+                        additionalData: {} // Empty object for Google Sheets fallback
                       }
         
         handhelds.push(handheld)

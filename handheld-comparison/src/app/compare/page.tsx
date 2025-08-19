@@ -47,7 +47,7 @@ export default function ComparePage() {
       
       const data = await response.json()
       console.log(`✅ Frontend received ${data.length} handhelds`)
-      console.log('First 3 image URLs:', data.slice(0, 3).map((h: any) => `${h.name}: ${h.imageURL}`))
+      console.log('First 3 image URLs:', data.slice(0, 3).map((h: Handheld) => `${h.name}: ${h.imageURL}`))
       setHandhelds(data)
     } catch (err) {
       console.error('Error fetching handhelds:', err)
@@ -58,11 +58,19 @@ export default function ComparePage() {
   }
 
   const toggleHandheldSelection = (name: string) => {
-    setSelectedHandhelds(prev => 
-      prev.includes(name) 
-        ? prev.filter(h => h !== name)
-        : [...prev, name]
-    )
+    setSelectedHandhelds(prev => {
+      if (prev.includes(name)) {
+        return prev.filter(h => h !== name)
+      } else {
+        // Limit to maximum of 3 handhelds
+        if (prev.length >= 3) {
+          // Remove the oldest selection and add the new one
+          return [...prev.slice(1), name]
+        } else {
+          return [...prev, name]
+        }
+      }
+    })
   }
 
   // Filter handhelds based on search query
@@ -132,6 +140,12 @@ export default function ComparePage() {
                             {/* Device Selection */}
                     <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
                       <h2 className="text-xl font-semibold text-gray-900 mb-4">Select Devices to Compare</h2>
+                      <p className="text-sm text-gray-600 mb-4">
+                        Maximum of 3 devices can be compared at once 
+                        <span className="ml-2 text-blue-600 font-medium">
+                          ({selectedHandhelds.length}/3 selected)
+                        </span>
+                      </p>
                       
                       {/* Search Bar */}
                       <div className="mb-6">
@@ -187,19 +201,30 @@ export default function ComparePage() {
                           {filteredHandhelds.map((handheld) => (
               <div 
                 key={handheld.name}
-                className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                className={`border-2 rounded-lg p-4 transition-all ${
                   selectedHandhelds.includes(handheld.name)
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300'
+                    ? 'border-blue-500 bg-blue-50 cursor-pointer'
+                    : selectedHandhelds.length >= 3 && !selectedHandhelds.includes(handheld.name)
+                    ? 'border-gray-200 bg-gray-100 cursor-not-allowed opacity-60'
+                    : 'border-gray-200 hover:border-gray-300 cursor-pointer'
                 }`}
-                onClick={() => toggleHandheldSelection(handheld.name)}
+                onClick={() => {
+                  if (selectedHandhelds.length < 3 || selectedHandhelds.includes(handheld.name)) {
+                    toggleHandheldSelection(handheld.name)
+                  }
+                }}
               >
                 <div className="flex items-center space-x-3">
                   <input
                     type="checkbox"
                     checked={selectedHandhelds.includes(handheld.name)}
                     onChange={() => toggleHandheldSelection(handheld.name)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded flex-shrink-0"
+                    disabled={selectedHandhelds.length >= 3 && !selectedHandhelds.includes(handheld.name)}
+                    className={`h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded flex-shrink-0 ${
+                      selectedHandhelds.length >= 3 && !selectedHandhelds.includes(handheld.name)
+                        ? 'opacity-50 cursor-not-allowed'
+                        : ''
+                    }`}
                   />
                                                   <div className="flex-shrink-0 w-20 h-16 bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-center">
                                   <img
