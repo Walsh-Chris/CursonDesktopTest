@@ -178,6 +178,46 @@ export default function ComparePage() {
                             Showing {filteredHandhelds.length} of {handhelds.length} devices
                           </p>
                         )}
+                        
+                        {/* Current Selections Display */}
+                        {selectedHandhelds.length > 0 && (
+                          <div className="mt-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <p className="text-sm font-medium text-gray-700">Currently Selected:</p>
+                              {selectedHandhelds.length > 1 && (
+                                <button
+                                  onClick={() => setSelectedHandhelds([])}
+                                  className="text-sm text-red-600 hover:text-red-800 font-medium transition-colors"
+                                  title="Clear all selections"
+                                >
+                                  Clear All
+                                </button>
+                              )}
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedHandhelds.map((handheldName) => {
+                                const handheld = handhelds.find(h => h.name === handheldName)
+                                return (
+                                  <div 
+                                    key={handheldName}
+                                    className="flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-2 rounded-lg border border-blue-200"
+                                  >
+                                    <span className="text-sm font-medium">{handheld?.name || handheldName}</span>
+                                    <button
+                                      onClick={() => toggleHandheldSelection(handheldName)}
+                                      className="text-blue-600 hover:text-blue-800 transition-colors"
+                                      title="Remove selection"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </div>
                       
                       {filteredHandhelds.length === 0 ? (
