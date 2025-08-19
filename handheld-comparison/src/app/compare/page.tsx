@@ -137,18 +137,18 @@ export default function ComparePage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                            {/* Device Selection */}
-                    <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
-                      <h2 className="text-xl font-semibold text-gray-900 mb-4">Select Devices to Compare</h2>
-                      <p className="text-sm text-gray-600 mb-4">
-                        Maximum of 3 devices can be compared at once 
-                        <span className="ml-2 text-blue-600 font-medium">
-                          ({selectedHandhelds.length}/3 selected)
-                        </span>
-                      </p>
-                      
-                      {/* Search Bar */}
-                      <div className="mb-6">
+        {/* Device Selection */}
+        <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Select Devices to Compare</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Maximum of 3 devices can be compared at once 
+            <span className="ml-2 text-blue-600 font-medium">
+              ({selectedHandhelds.length}/3 selected)
+            </span>
+          </p>
+          
+          {/* Search Bar */}
+          <div className="mb-6">
                         <div className="relative">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
