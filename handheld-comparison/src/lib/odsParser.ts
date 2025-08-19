@@ -204,16 +204,23 @@ export async function parseODSFile(filePath: string): Promise<Handheld[]> {
       }
     }
     
+    // Remove duplicates based on name
+    const uniqueHandhelds = handhelds.filter((handheld, index, self) => 
+      index === self.findIndex(h => h.name === handheld.name)
+    )
+    
     // Log comprehensive data extraction summary
     console.log(`📊 Comprehensive data extraction summary:`)
     console.log(`   - Total devices: ${handhelds.length}`)
-    console.log(`   - Devices with additional data: ${handhelds.filter(h => Object.keys(h.additionalData).length > 0).length}`)
-    if (handhelds.length > 0) {
-      const sampleKeys = Object.keys(handhelds[0].additionalData || {})
+    console.log(`   - Unique devices: ${uniqueHandhelds.length}`)
+    console.log(`   - Duplicates removed: ${handhelds.length - uniqueHandhelds.length}`)
+    console.log(`   - Devices with additional data: ${uniqueHandhelds.filter(h => Object.keys(h.additionalData).length > 0).length}`)
+    if (uniqueHandhelds.length > 0) {
+      const sampleKeys = Object.keys(uniqueHandhelds[0].additionalData || {})
       console.log(`   - Sample column names (first 10):`, sampleKeys.slice(0, 10))
     }
     
-    return handhelds
+    return uniqueHandhelds
     
   } catch (error) {
     console.error('Error parsing ODS file:', error)
