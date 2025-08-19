@@ -10,6 +10,10 @@ interface Handheld {
   releaseYear: string
   performanceScore: string
   imageURL: string
+  // All additional data using actual column names
+  additionalData: {
+    [columnName: string]: string // All extra columns beyond the basic 6
+  }
 }
 
 export default function ComparePage() {
@@ -225,14 +229,14 @@ export default function ComparePage() {
         {selectedHandheldData.length > 0 && (
           <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="min-w-full divide-y divide-gray-200 table-fixed">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="w-64 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Specification
                     </th>
                     {selectedHandheldData.map((handheld) => (
-                      <th key={handheld.name} className="px-6 py-3 text-center">
+                      <th key={handheld.name} className="w-52 px-6 py-3 text-center">
                                                             <div className="flex flex-col items-center space-y-2">
                                       <div className="w-16 h-12 bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-center">
                                         <img
@@ -246,7 +250,7 @@ export default function ComparePage() {
                                           }}
                                         />
                                       </div>
-                                      <div className="text-xs font-medium text-gray-900 text-center">
+                                      <div className="text-xs font-medium text-gray-900 text-center break-words">
                                         {handheld.name}
                                       </div>
                                       <div className="text-xs text-gray-500">
@@ -259,39 +263,67 @@ export default function ComparePage() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   <tr>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Brand</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                      <div className="break-words" style={{ wordBreak: 'break-word', hyphens: 'auto', maxWidth: '200px' }}>
+                        Brand
+                      </div>
+                    </td>
                     {selectedHandheldData.map((handheld) => (
-                      <td key={handheld.name} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {handheld.brand}
+                      <td key={handheld.name} className="px-6 py-4 text-sm text-gray-900">
+                        <div className="break-words" style={{ wordBreak: 'break-word', hyphens: 'auto', maxWidth: '200px' }}>
+                          {handheld.brand}
+                        </div>
                       </td>
                     ))}
                   </tr>
                   <tr>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Price</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                      <div className="break-words" style={{ wordBreak: 'break-word', hyphens: 'auto', maxWidth: '200px' }}>
+                        Price
+                      </div>
+                    </td>
                     {selectedHandheldData.map((handheld) => (
-                      <td key={handheld.name} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {handheld.price}
+                      <td key={handheld.name} className="px-6 py-4 text-sm text-gray-900">
+                        <div className="break-words" style={{ wordBreak: 'break-word', hyphens: 'auto', maxWidth: '200px' }}>
+                          {handheld.price}
+                        </div>
                       </td>
                     ))}
                   </tr>
                   <tr>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Release Year</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                      <div className="break-words" style={{ wordBreak: 'break-word', hyphens: 'auto', maxWidth: '200px' }}>
+                        Release Year
+                      </div>
+                    </td>
                     {selectedHandheldData.map((handheld) => (
-                      <td key={handheld.name} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {handheld.releaseYear}
+                      <td key={handheld.name} className="px-6 py-4 text-sm text-gray-900">
+                        <div className="break-words" style={{ wordBreak: 'break-word', hyphens: 'auto', maxWidth: '200px' }}>
+                          {handheld.releaseYear}
+                        </div>
                       </td>
                     ))}
                   </tr>
                   <tr>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Performance Score</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                      <div className="break-words" style={{ wordBreak: 'break-word', hyphens: 'auto', maxWidth: '200px' }}>
+                        Performance Score
+                      </div>
+                    </td>
                     {selectedHandheldData.map((handheld) => (
-                      <td key={handheld.name} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {handheld.performanceScore}
+                      <td key={handheld.name} className="px-6 py-4 text-sm text-gray-900">
+                        <div className="break-words" style={{ wordBreak: 'break-word', hyphens: 'auto', maxWidth: '200px' }}>
+                          {handheld.performanceScore}
+                        </div>
                       </td>
                     ))}
                   </tr>
                   <tr>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Image</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                      <div className="break-words" style={{ wordBreak: 'break-word', hyphens: 'auto', maxWidth: '200px' }}>
+                        Image
+                      </div>
+                    </td>
                     {selectedHandheldData.map((handheld) => (
                       <td key={handheld.name} className="px-6 py-4 whitespace-nowrap">
                                                             <div className="flex flex-col items-center space-y-2">
@@ -319,6 +351,34 @@ export default function ComparePage() {
                       </td>
                     ))}
                   </tr>
+                  
+                  {/* Additional Data Section using actual column names */}
+                  {selectedHandheldData.some(h => Object.keys(h.additionalData || {}).length > 0) && (
+                    <>
+                      <tr className="bg-blue-50">
+                        <td colSpan={selectedHandheldData.length + 1} className="px-6 py-3 text-sm font-bold text-blue-900 border-t-2 border-blue-200">
+                          📊 ADDITIONAL DATA
+                        </td>
+                      </tr>
+                      {/* Get all unique column names from additional data */}
+                      {Array.from(new Set(selectedHandheldData.flatMap(h => Object.keys(h.additionalData || {})))).map((columnName) => (
+                        <tr key={`additional-${columnName}`}>
+                          <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                            <div className="break-words" style={{ wordBreak: 'break-word', hyphens: 'auto', maxWidth: '200px' }}>
+                              {columnName}
+                            </div>
+                          </td>
+                          {selectedHandheldData.map((handheld) => (
+                            <td key={handheld.name} className="px-6 py-4 text-sm text-gray-900">
+                              <div className="max-w-xs break-words" style={{ wordBreak: 'break-word', hyphens: 'auto', maxWidth: '200px' }}>
+                                {handheld.additionalData?.[columnName] || 'N/A'}
+                              </div>
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </>
+                  )}
                 </tbody>
               </table>
             </div>

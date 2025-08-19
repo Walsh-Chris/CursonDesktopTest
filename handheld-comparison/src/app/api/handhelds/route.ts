@@ -14,6 +14,10 @@ interface Handheld {
   releaseYear: string
   performanceScore: string
   imageURL: string
+  // All additional data using actual column names
+  additionalData: {
+    [columnName: string]: string // All extra columns beyond the basic 6
+  }
 }
 
 function getDeviceImageURL(deviceName: string): string {

@@ -10,6 +10,10 @@ interface Handheld {
   releaseYear: string
   performanceScore: string
   imageURL: string
+  // All additional data using actual column names
+  additionalData: {
+    [columnName: string]: string // All extra columns beyond the basic 6
+  }
 }
 
 export async function parseODSFile(filePath: string): Promise<Handheld[]> {
@@ -69,6 +73,26 @@ export async function parseODSFile(filePath: string): Promise<Handheld[]> {
     // Create a mapping of row index to image references
     const rowImageMap: { [key: number]: string } = {}
     
+    // First, extract header row to get column names
+    const headerRow = rows[0]
+    const headerCells = headerRow.getElementsByTagName('table:table-cell')
+    const columnNames: string[] = []
+    
+    for (let j = 0; j < headerCells.length; j++) {
+      const headerCell = headerCells[j]
+      const headerTextElements = headerCell.getElementsByTagName('text:p')
+      let headerValue = ''
+      
+      if (headerTextElements.length > 0) {
+        headerValue = headerTextElements[0].textContent || ''
+      }
+      
+      // Use "TEST" for empty column names as requested
+      columnNames.push(headerValue.trim() || 'TEST')
+    }
+    
+    console.log(`📋 Found ${columnNames.length} column headers:`, columnNames.slice(0, 15))
+    
     // Skip header row (index 0), start from index 1
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i]
@@ -79,7 +103,8 @@ export async function parseODSFile(filePath: string): Promise<Handheld[]> {
         const values: string[] = []
         let hasImageInColumnA = false
         
-        for (let j = 0; j < 6; j++) {
+        // Process ALL available columns, not just first 6
+        for (let j = 0; j < cells.length; j++) {
           const cell = cells[j]
           const textElements = cell.getElementsByTagName('text:p')
           let cellValue = ''
@@ -140,18 +165,52 @@ export async function parseODSFile(filePath: string): Promise<Handheld[]> {
             }
           }
           
+          // Extract additional data using actual column names
+          const additionalData: { [key: string]: string } = {}
+          
+          // Debug: Log column information for first few rows
+          if (i <= 2) {
+            console.log(`Row ${i}: Found ${values.length} columns`)
+            console.log(`Row ${i} sample values:`, values.slice(0, Math.min(15, values.length)))
+          }
+          
+          // Process all available columns beyond the basic 6 columns
+          for (let col = 6; col < values.length; col++) {
+            const value = values[col]
+            if (value && value.trim() !== '' && value !== 'TBA') {
+              // Use actual column name from header, fallback to "TEST" if not available
+              const columnName = columnNames[col] || 'TEST'
+              additionalData[columnName] = value.trim()
+              
+              // Add debug info for first device
+              if (i === 1) {
+                console.log(`Col ${col} (${columnName}): "${value.trim()}"`)
+              }
+            }
+          }
+          
           const handheld: Handheld = {
             name: deviceName,
             brand: values[2] && values[2].trim() !== '' ? values[2].trim() : 'TBA', // Column C: Brand
             price: 'TBA', // No price column in current structure
             releaseYear: values[3] && values[3].trim() !== '' ? values[3].trim() : 'TBA', // Column D: Released
             performanceScore: values[4] && values[4].trim() !== '' ? values[4].trim() : 'TBA', // Column E: Form Factor
-            imageURL: imageURL
+            imageURL: imageURL,
+            additionalData
           }
           
           handhelds.push(handheld)
         }
       }
+    }
+    
+    // Log comprehensive data extraction summary
+    console.log(`📊 Comprehensive data extraction summary:`)
+    console.log(`   - Total devices: ${handhelds.length}`)
+    console.log(`   - Devices with additional data: ${handhelds.filter(h => Object.keys(h.additionalData).length > 0).length}`)
+    if (handhelds.length > 0) {
+      const sampleKeys = Object.keys(handhelds[0].additionalData || {})
+      console.log(`   - Sample column names (first 10):`, sampleKeys.slice(0, 10))
     }
     
     return handhelds
