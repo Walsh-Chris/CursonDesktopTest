@@ -220,74 +220,87 @@ export default function ComparePage() {
                         )}
                       </div>
                       
-                      {filteredHandhelds.length === 0 ? (
-                        <div className="text-center py-12">
-                          <div className="text-gray-400 mb-4">
+                      {/* Show device selection grid only when less than 3 devices are selected */}
+                      {selectedHandhelds.length < 3 && (
+                        <>
+                          {filteredHandhelds.length === 0 ? (
+                            <div className="text-center py-12">
+                              <div className="text-gray-400 mb-4">
+                                <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                              </div>
+                              <h3 className="text-lg font-medium text-gray-900 mb-2">No devices found</h3>
+                              <p className="text-gray-500 mb-4">Try adjusting your search terms or clearing the search.</p>
+                              <button
+                                onClick={() => setSearchQuery('')}
+                                className="text-blue-600 hover:text-blue-700 font-medium"
+                              >
+                                Clear search
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              {filteredHandhelds.map((handheld) => (
+                                <div 
+                                  key={handheld.name}
+                                  className={`border-2 rounded-lg p-4 transition-all ${
+                                    selectedHandhelds.includes(handheld.name)
+                                      ? 'border-blue-500 bg-blue-50 cursor-pointer'
+                                      : 'border-gray-200 hover:border-gray-300 cursor-pointer'
+                                  }`}
+                                  onClick={() => toggleHandheldSelection(handheld.name)}
+                                >
+                                  <div className="flex items-center space-x-3">
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedHandhelds.includes(handheld.name)}
+                                      onChange={() => toggleHandheldSelection(handheld.name)}
+                                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded flex-shrink-0"
+                                    />
+                                    <div className="flex-shrink-0 w-20 h-16 bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-center">
+                                      <img
+                                        src={handheld.imageURL}
+                                        alt={handheld.name}
+                                        className="max-w-full max-h-full object-contain rounded-lg"
+                                        onError={(e) => {
+                                          const target = e.target as HTMLImageElement;
+                                          console.log(`Image failed to load: ${target.src} for ${handheld.name}`);
+                                          target.src = 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400';
+                                        }}
+                                      />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <h3 className="font-medium text-gray-900 truncate">{handheld.name}</h3>
+                                      <p className="text-sm text-gray-500 truncate">{handheld.brand}</p>
+                                      <p className="text-xs text-gray-400 truncate">{handheld.releaseYear}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      )}
+                      
+                      {/* Show message when 3 devices are selected */}
+                      {selectedHandhelds.length === 3 && (
+                        <div className="text-center py-8">
+                          <div className="text-green-500 mb-4">
                             <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                           </div>
-                          <h3 className="text-lg font-medium text-gray-900 mb-2">No devices found</h3>
-                          <p className="text-gray-500 mb-4">Try adjusting your search terms or clearing the search.</p>
+                          <h3 className="text-lg font-medium text-gray-900 mb-2">3 Devices Selected!</h3>
+                          <p className="text-gray-500 mb-4">Scroll down to view the detailed comparison table.</p>
                           <button
-                            onClick={() => setSearchQuery('')}
+                            onClick={() => setSelectedHandhelds([])}
                             className="text-blue-600 hover:text-blue-700 font-medium"
                           >
-                            Clear search
+                            Change Selection
                           </button>
                         </div>
-                      ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {filteredHandhelds.map((handheld) => (
-              <div 
-                key={handheld.name}
-                className={`border-2 rounded-lg p-4 transition-all ${
-                  selectedHandhelds.includes(handheld.name)
-                    ? 'border-blue-500 bg-blue-50 cursor-pointer'
-                    : selectedHandhelds.length >= 3 && !selectedHandhelds.includes(handheld.name)
-                    ? 'border-gray-200 bg-gray-100 cursor-not-allowed opacity-60'
-                    : 'border-gray-200 hover:border-gray-300 cursor-pointer'
-                }`}
-                onClick={() => {
-                  if (selectedHandhelds.length < 3 || selectedHandhelds.includes(handheld.name)) {
-                    toggleHandheldSelection(handheld.name)
-                  }
-                }}
-              >
-                <div className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={selectedHandhelds.includes(handheld.name)}
-                    onChange={() => toggleHandheldSelection(handheld.name)}
-                    disabled={selectedHandhelds.length >= 3 && !selectedHandhelds.includes(handheld.name)}
-                    className={`h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded flex-shrink-0 ${
-                      selectedHandhelds.length >= 3 && !selectedHandhelds.includes(handheld.name)
-                        ? 'opacity-50 cursor-not-allowed'
-                        : ''
-                    }`}
-                  />
-                                                  <div className="flex-shrink-0 w-20 h-16 bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-center">
-                                  <img
-                                    src={handheld.imageURL}
-                                    alt={handheld.name}
-                                    className="max-w-full max-h-full object-contain rounded-lg"
-                                    onError={(e) => {
-                                      const target = e.target as HTMLImageElement;
-                                      console.log(`Image failed to load: ${target.src} for ${handheld.name}`);
-                                      target.src = 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400';
-                                    }}
-                                  />
-                                </div>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="font-medium text-gray-900 truncate">{handheld.name}</h3>
-                    <p className="text-sm text-gray-500 truncate">{handheld.brand}</p>
-                    <p className="text-xs text-gray-400 truncate">{handheld.releaseYear}</p>
-                  </div>
-                </div>
-              </div>
-              ))}
-            </div>
-          )}
+                      )}
         </div>
 
         {/* Comparison Table */}
